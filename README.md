@@ -1,5 +1,8 @@
 # VeinMining
 
+## Updated and Maintained by Riprod
+*All I have done is migrations / small code changes for aligning with best practices. All original code is not mine*
+
 Efficient excavation and ore extraction mod for Hytale. Automatically mine connected blocks using customizable patterns and targeting modes.
 
 ## Usage
