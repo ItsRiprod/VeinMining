@@ -13,6 +13,7 @@ import com.hypixel.hytale.server.core.entity.EntityUtils;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.Config;
 
@@ -40,16 +41,16 @@ public class VeinMiningInputSystem extends EntityTickingSystem<EntityStore> {
 
     @Override
     public void tick(float dt, int index, @Nonnull ArchetypeChunk<EntityStore> archetypeChunk, @Nonnull Store<EntityStore> store, @Nonnull CommandBuffer<EntityStore> commandBuffer) {
-        Holder<EntityStore> holder = EntityUtils.toHolder(index, archetypeChunk);
-        Player player = holder.getComponent(Player.getComponentType());
-        MovementStatesComponent moveComp = holder.getComponent(MovementStatesComponent.getComponentType());
-        UUIDComponent uuidComp = holder.getComponent(UUIDComponent.getComponentType());
+        Player player = archetypeChunk.getComponent(index, Player.getComponentType());
+        PlayerRef playerRef = archetypeChunk.getComponent(index, PlayerRef.getComponentType());
+        MovementStatesComponent moveComp = archetypeChunk.getComponent(index, MovementStatesComponent.getComponentType());
+        UUIDComponent uuidComp = archetypeChunk.getComponent(index, UUIDComponent.getComponentType());
 
-        if (player == null || moveComp == null || uuidComp == null) return;
+        if (player == null || moveComp == null || uuidComp == null || playerRef == null) return;
 
         String uuid = uuidComp.getUuid().toString();
         VeinMiningConfig cfg = config.get();
-        boolean isAdmin = player.hasPermission("veinmining.admin");
+        boolean isAdmin = playerRef.hasPermission("veinmining.admin");
         VeinMiningConfig.GroupSettings group = cfg.resolveGroup(player);
 
         if (!cfg.isModEnabled(uuid, isAdmin)) return;
@@ -83,7 +84,7 @@ public class VeinMiningInputSystem extends EntityTickingSystem<EntityStore> {
 
                     int displayIndex = nextIdx + 1;
 
-                    player.sendMessage(Message.join(
+                    playerRef.sendMessage(Message.join(
                             Message.raw("[").color("#555555"),
                             Message.raw("VeinMining").color("#55FF55"),
                             Message.raw("] ").color("#555555"),
