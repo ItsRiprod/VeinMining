@@ -3,6 +3,7 @@ package com.einent.veinmining.commands;
 import com.einent.veinmining.config.VeinMiningConfig;
 import com.einent.veinmining.gui.VeinMiningGui;
 import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.server.core.Message;
@@ -11,8 +12,10 @@ import com.hypixel.hytale.server.core.command.system.CommandSender;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractAsyncCommand;
+import com.hypixel.hytale.server.core.command.system.basecommands.AbstractAsyncPlayerCommand;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.permissions.provider.HytalePermissionsProvider;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -26,15 +29,17 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 
-public class VeinMiningCommand extends AbstractAsyncCommand {
+public class VeinMiningCommand extends AbstractAsyncPlayerCommand {
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     private final Config<VeinMiningConfig> config;
-    private final OptionalArg<String> modeArg, patternArg, orientationArg, keyArg, targetArg, allowedModesArg, allowedPatternsArg;
+    private final OptionalArg<String> modeArg, patternArg, orientationArg, keyArg, targetArg, allowedModesArg,
+            allowedPatternsArg;
     private final OptionalArg<Integer> limitArg;
     private final OptionalArg<Boolean> allowGuiArg, enabledArg;
 
     private static final List<String> VALID_MODES = Arrays.asList("ores", "all", "off");
-    private static final List<String> VALID_PATTERNS = Arrays.asList("freeform", "cube", "tunnel3", "tunnel2", "tunnel1", "wall3", "wall5", "diagonal");
+    private static final List<String> VALID_PATTERNS = Arrays.asList("freeform", "cube", "tunnel3", "tunnel2",
+            "tunnel1", "wall3", "wall5", "diagonal");
 
     public VeinMiningCommand(Config<VeinMiningConfig> config) {
         super("veinmining", "Configure VeinMining settings.");
@@ -50,10 +55,12 @@ public class VeinMiningCommand extends AbstractAsyncCommand {
         this.limitArg = this.withOptionalArg("limit", "Set max blocks (Admin)", ArgTypes.INTEGER);
         this.allowGuiArg = this.withOptionalArg("gui", "Allow/Deny GUI (Admin)", ArgTypes.BOOLEAN);
         this.enabledArg = this.withOptionalArg("enable", "Enable/Disable mod (Admin)", ArgTypes.BOOLEAN);
-        this.allowedModesArg = this.withOptionalArg("allowed_modes", "CSV, 'inherit' or 'none' (Admin)", ArgTypes.STRING);
-        this.allowedPatternsArg = this.withOptionalArg("allowed_patterns", "CSV, 'inherit' or 'none' (Admin)", ArgTypes.STRING);
+        this.allowedModesArg = this.withOptionalArg("allowed_modes", "CSV, 'inherit' or 'none' (Admin)",
+                ArgTypes.STRING);
+        this.allowedPatternsArg = this.withOptionalArg("allowed_patterns", "CSV, 'inherit' or 'none' (Admin)",
+                ArgTypes.STRING);
 
-        this.setPermissionGroup(GameMode.Adventure);
+        this.setPermissionGroups(HytalePermissionsProvider.GROUP_ADVENTURER);
     }
 
     @Override
@@ -63,59 +70,57 @@ public class VeinMiningCommand extends AbstractAsyncCommand {
 
     @Override
     @Nonnull
-    protected CompletableFuture<Void> executeAsync(@Nonnull CommandContext context) {
-        if (!(context.sender() instanceof Player player)) {
-            context.sendMessage(Message.raw("Only players can use this command."));
+    protected CompletableFuture<Void> executeAsync(@Nonnull CommandContext context, @Nonnull Store<EntityStore> store,
+            @Nonnull Ref<EntityStore> pRef, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+
+        try {
+            VeinMiningConfig cfg = config.get();
+
+            String tName = targetArg.get(context);
+            boolean isAdmin = playerRef.hasPermission("veinmining.admin");
+
+            if (tName != null) {
+                if (!isAdmin) {
+                    context.sendMessage(Message.raw("No permission to modify others."));
+                    return CompletableFuture.completedFuture(null);
+                }
+                handleAdmin(context, world, tName);
+                return CompletableFuture.completedFuture(null);
+            }
+
+            UUIDComponent uuidComp = store.getComponent(pRef, UUIDComponent.getComponentType());
+            if (uuidComp == null)
+                return CompletableFuture.completedFuture(null);
+            String uuid = uuidComp.getUuid().toString();
+
+            if (!cfg.isModEnabled(uuid, isAdmin)) {
+                context.sendMessage(Message.raw("VeinMining is disabled for you."));
+                return CompletableFuture.completedFuture(null);
+            }
+
+            Player player = store.getComponent(pRef, Player.getComponentType());
+            if (modeArg.get(context) == null && patternArg.get(context) == null && orientationArg.get(context) == null
+                    && keyArg.get(context) == null) {
+                openGui(context, player, uuid, isAdmin);
+                return CompletableFuture.completedFuture(null);
+            }
+
+            handlePlayer(context, player, uuid, isAdmin);
+            return CompletableFuture.completedFuture(null);
+        } catch (Exception e) {
+            LOGGER.at(Level.SEVERE).log("Error in VeinMiningCommand", e);
             return CompletableFuture.completedFuture(null);
         }
-
-        World world = player.getWorld();
-        if (world == null) return CompletableFuture.completedFuture(null);
-
-        return CompletableFuture.runAsync(() -> {
-            try {
-                VeinMiningConfig cfg = config.get();
-                Ref<EntityStore> pRef = player.getReference();
-                if (pRef == null || !pRef.isValid()) return;
-
-                String tName = targetArg.get(context);
-                boolean isAdmin = player.hasPermission("veinmining.admin");
-
-                if (tName != null) {
-                    if (!isAdmin) {
-                        context.sendMessage(Message.raw("No permission to modify others."));
-                        return;
-                    }
-                    handleAdmin(context, world, tName);
-                    return;
-                }
-
-                UUIDComponent uuidComp = pRef.getStore().getComponent(pRef, UUIDComponent.getComponentType());
-                if (uuidComp == null) return;
-                String uuid = uuidComp.getUuid().toString();
-
-                if (!cfg.isModEnabled(uuid, isAdmin)) {
-                    context.sendMessage(Message.raw("VeinMining is disabled for you."));
-                    return;
-                }
-
-                if (modeArg.get(context) == null && patternArg.get(context) == null && orientationArg.get(context) == null && keyArg.get(context) == null) {
-                    openGui(context, player, uuid, isAdmin);
-                    return;
-                }
-
-                handlePlayer(context, player, uuid, isAdmin);
-            } catch (Exception e) {
-                LOGGER.at(Level.SEVERE).log("Error in VeinMiningCommand", e);
-            }
-        }, world);
     }
 
     private void handleAdmin(CommandContext context, World world, String target) {
         VeinMiningConfig cfg = config.get();
         UUID tUuid = null;
         String tDisplay = target;
-        try { tUuid = UUID.fromString(target); } catch (Exception ignored) {}
+        try {
+            tUuid = UUID.fromString(target);
+        } catch (Exception ignored) {
+        }
 
         if (tUuid == null) {
             for (PlayerRef pRef : world.getPlayerRefs()) {
@@ -137,15 +142,19 @@ public class VeinMiningCommand extends AbstractAsyncCommand {
         String ap = allowedPatternsArg.get(context);
         String[] patterns = parseListArg(ap, VALID_PATTERNS);
 
-        cfg.setPlayerOverride(tUuid.toString(), limitArg.get(context), allowGuiArg.get(context), enabledArg.get(context), modes, patterns);
+        cfg.setPlayerOverride(tUuid.toString(), limitArg.get(context), allowGuiArg.get(context),
+                enabledArg.get(context), modes, patterns);
         config.save();
         context.sendMessage(Message.raw("Admin: Updated settings for " + tDisplay));
     }
 
     private String[] parseListArg(String arg, List<String> validOptions) {
-        if (arg == null) return null;
-        if (arg.equalsIgnoreCase("inherit")) return null;
-        if (arg.equalsIgnoreCase("none") || arg.isEmpty()) return new String[0];
+        if (arg == null)
+            return null;
+        if (arg.equalsIgnoreCase("inherit"))
+            return null;
+        if (arg.equalsIgnoreCase("none") || arg.isEmpty())
+            return new String[0];
 
         return Arrays.stream(arg.replace("\"", "").split(","))
                 .map(String::trim)
@@ -165,8 +174,8 @@ public class VeinMiningCommand extends AbstractAsyncCommand {
             if (cfg.getEffectiveAllowedModes(uuid, group, isAdmin).contains(val)) {
                 cfg.setPlayerTargetMode(uuid, val);
                 updates.add("Mode: " + val.toUpperCase());
-            }
-            else context.sendMessage(Message.raw("Mode '" + val + "' is restricted for your rank."));
+            } else
+                context.sendMessage(Message.raw("Mode '" + val + "' is restricted for your rank."));
         }
 
         String rp = patternArg.get(context);
@@ -175,13 +184,13 @@ public class VeinMiningCommand extends AbstractAsyncCommand {
             if (cfg.isPatternAllowed(uuid, val, group, isAdmin)) {
                 cfg.setPlayerPattern(uuid, val);
                 updates.add("Pattern: " + val);
-            }
-            else context.sendMessage(Message.raw("Pattern '" + val + "' is restricted for your rank."));
+            } else
+                context.sendMessage(Message.raw("Pattern '" + val + "' is restricted for your rank."));
         }
 
         String ori = orientationArg.get(context);
         if (ori != null) {
-            if(ori.equalsIgnoreCase("player") || ori.equalsIgnoreCase("block")) {
+            if (ori.equalsIgnoreCase("player") || ori.equalsIgnoreCase("block")) {
                 cfg.setPlayerOrientation(uuid, ori.toLowerCase());
                 updates.add("Orientation Updated");
             }
@@ -189,7 +198,8 @@ public class VeinMiningCommand extends AbstractAsyncCommand {
 
         String key = keyArg.get(context);
         if (key != null) {
-            if(key.equalsIgnoreCase("walking") || key.equalsIgnoreCase("crouching") || key.equalsIgnoreCase("walk") || key.equalsIgnoreCase("crouch") || key.equalsIgnoreCase("always")) {
+            if (key.equalsIgnoreCase("walking") || key.equalsIgnoreCase("crouching") || key.equalsIgnoreCase("walk")
+                    || key.equalsIgnoreCase("crouch") || key.equalsIgnoreCase("always")) {
                 String normalized;
                 if (key.equalsIgnoreCase("always")) {
                     normalized = "always";
@@ -217,7 +227,8 @@ public class VeinMiningCommand extends AbstractAsyncCommand {
         }
 
         Ref<EntityStore> ref = player.getReference();
-        if (ref == null || !ref.isValid()) return;
+        if (ref == null || !ref.isValid())
+            return;
 
         PlayerRef pr = ref.getStore().getComponent(ref, PlayerRef.getComponentType());
         if (pr != null) {

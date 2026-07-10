@@ -64,13 +64,14 @@ public class VeinMiningGui extends InteractiveCustomUIPage<VeinMiningGui.GuiData
     private void updateVisuals(Ref<EntityStore> ref, UICommandBuilder ui, UIEventBuilder events, Store<EntityStore> store) {
         UUIDComponent uuidComp = store.getComponent(ref, UUIDComponent.getComponentType());
         Player player = store.getComponent(ref, Player.getComponentType());
+        PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
 
         if (uuidComp == null || player == null) return;
 
         String uuid = uuidComp.getUuid().toString();
         VeinMiningConfig cfg = config.get();
 
-        boolean isAdmin = player.hasPermission("veinmining.admin");
+        boolean isAdmin = playerRef.hasPermission("veinmining.admin");
         VeinMiningConfig.GroupSettings group = cfg.resolveGroup(player);
 
         String currentTarget = cfg.getPlayerTargetMode(uuid);
@@ -153,14 +154,15 @@ public class VeinMiningGui extends InteractiveCustomUIPage<VeinMiningGui.GuiData
     public void handleDataEvent(@Nonnull Ref<EntityStore> ref, @Nonnull Store<EntityStore> store, @Nonnull GuiData data) {
         UUIDComponent uuidComp = store.getComponent(ref, UUIDComponent.getComponentType());
         Player player = store.getComponent(ref, Player.getComponentType());
+        PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
 
-        if (uuidComp == null || player == null || data.action == null) return;
+        if (uuidComp == null || player == null || playerRef == null || data.action == null) return;
 
         String uuid = uuidComp.getUuid().toString();
         boolean needsSave = false;
         VeinMiningConfig cfg = config.get();
 
-        boolean isAdmin = player.hasPermission("veinmining.admin");
+        boolean isAdmin = playerRef.hasPermission("veinmining.admin");
         VeinMiningConfig.GroupSettings group = cfg.resolveGroup(player);
 
         if ("SetTarget".equals(data.action)) {

@@ -7,17 +7,20 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.EntityEventSystem;
-import com.hypixel.hytale.math.vector.Vector3i;
 import com.hypixel.hytale.protocol.MovementStates;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
 import com.hypixel.hytale.server.core.event.events.ecs.BreakBlockEvent;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.Config;
 
 import javax.annotation.Nonnull;
+
+import org.joml.Vector3i;
+
 import java.util.concurrent.CompletableFuture;
 
 public class VeinMiningSystem extends EntityEventSystem<EntityStore, BreakBlockEvent> {
@@ -38,15 +41,16 @@ public class VeinMiningSystem extends EntityEventSystem<EntityStore, BreakBlockE
         if (MiningManager.IS_VEIN_MINING.get()) return;
 
         Ref<EntityStore> ref = archetypeChunk.getReferenceTo(index);
+        PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
         Player player = store.getComponent(ref, Player.getComponentType());
-        if (player == null) return;
+        if (playerRef == null) return;
 
         UUIDComponent uuidComp = store.getComponent(ref, UUIDComponent.getComponentType());
         if (uuidComp == null) return;
 
         VeinMiningConfig cfg = config.get();
         String uuid = uuidComp.getUuid().toString();
-        boolean isAdmin = player.hasPermission("veinmining.admin");
+        boolean isAdmin = playerRef.hasPermission("veinmining.admin");
         VeinMiningConfig.GroupSettings group = cfg.resolveGroup(player);
 
         String targetMode = cfg.getValidatedTargetMode(uuid, group, isAdmin);

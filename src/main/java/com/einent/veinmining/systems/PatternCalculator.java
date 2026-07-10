@@ -3,9 +3,11 @@ package com.einent.veinmining.systems;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.util.ChunkUtil;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
-import com.hypixel.hytale.math.vector.Vector3i;
+import com.hypixel.hytale.math.vector.Rotation3f;
+
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+import org.joml.Vector3i;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockType;
 import com.hypixel.hytale.server.core.modules.entity.component.HeadRotation;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
@@ -93,13 +95,13 @@ public class PatternCalculator {
 
         float yaw = 0, pitch = 0;
         if (headRot != null) {
-            Vector3f rotVec = headRot.getRotation();
-            yaw = rotVec.getYaw();
-            pitch = rotVec.getPitch();
+            Rotation3f rotVec = headRot.getRotation();
+            yaw = rotVec.yaw();
+            pitch = rotVec.pitch();
         } else if (trans != null) {
-            Vector3f rot = trans.getRotation();
-            yaw = rot.getYaw();
-            pitch = rot.getPitch();
+            Rotation3f rot = trans.getRotation();
+            yaw = rot.yaw();
+            pitch = rot.pitch();
         }
 
         Vector3f playerLook = getForwardVector(yaw, pitch);
@@ -273,9 +275,9 @@ public class PatternCalculator {
 
         if (trans == null || head == null) return new Vector3i(0, 1, 0);
 
-        Vector3d origin = trans.getPosition().clone().add(0, 1.62, 0);
-        Vector3f rot = head.getRotation();
-        Vector3f dirF = getForwardVector(rot.getYaw(), rot.getPitch());
+        Vector3d origin = new Vector3d(trans.getPosition()).add(0, 1.62, 0);
+        Rotation3f rot = head.getRotation();
+        Vector3f dirF = getForwardVector(rot.yaw(), rot.pitch());
         Vector3d dir = new Vector3d(dirF.x, dirF.y, dirF.z);
 
         double minX = target.x, minY = target.y, minZ = target.z;
@@ -321,7 +323,7 @@ public class PatternCalculator {
 
         if (!found) {
             Vector3d center = new Vector3d(target.x + 0.5, target.y + 0.5, target.z + 0.5);
-            Vector3d diff = origin.clone().subtract(center);
+            Vector3d diff = new Vector3d(origin).sub(center);
             double ax = Math.abs(diff.x);
             double ay = Math.abs(diff.y);
             double az = Math.abs(diff.z);

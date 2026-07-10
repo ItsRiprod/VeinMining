@@ -8,10 +8,11 @@ import javax.annotation.Nonnull;
 
 public class VeinMiningHud extends CustomUIHud {
 
+    private final String key = "EineNT_VeinMining_Hud";
     private String currentPattern = "freeform";
 
     public VeinMiningHud(@Nonnull PlayerRef playerRef) {
-        super(playerRef);
+        super(playerRef, "EineNT_VeinMining_Hud");
     }
 
     public void updatePattern(String pattern) {

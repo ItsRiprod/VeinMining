@@ -5,9 +5,11 @@ import com.hypixel.hytale.component.AddReason;
 import com.hypixel.hytale.component.Holder;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
-import com.hypixel.hytale.math.vector.Vector3i;
+import com.hypixel.hytale.math.vector.Rotation3f;
+
+import org.joml.Vector3d;
+import org.joml.Vector3f;
+import org.joml.Vector3i;
 import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.protocol.SoundCategory;
 import com.hypixel.hytale.server.core.asset.type.blocktype.config.BlockBreakingDropType;
@@ -18,10 +20,12 @@ import com.hypixel.hytale.server.core.asset.type.item.config.ItemTool;
 import com.hypixel.hytale.server.core.asset.type.item.config.ItemToolSpec;
 import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.server.core.blocktype.component.BlockPhysics;
+import com.hypixel.hytale.server.core.entity.ItemUtils;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.event.events.ecs.BreakBlockEvent;
 import com.hypixel.hytale.server.core.inventory.Inventory;
+import com.hypixel.hytale.server.core.inventory.InventoryComponent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
 import com.hypixel.hytale.server.core.modules.entity.item.ItemComponent;
@@ -66,16 +70,14 @@ public class MiningManager {
 
     public void performVeinMine(Player player, Ref<EntityStore> pRef, Vector3i startPos, String targetId, BlockType startBlockType, Store<EntityStore> store, String uuid, int effectiveLimit) {
         VeinMiningConfig cfg = config.get();
-        boolean isAdmin = player.hasPermission("veinmining.admin");
+        PlayerRef playerRef = store.getComponent(pRef, PlayerRef.getComponentType());
+        boolean isAdmin = playerRef.hasPermission("veinmining.admin");
 
         if (!cfg.isModEnabled(uuid, isAdmin)) return;
 
         World world = player.getWorld();
-        Inventory inv = player.getInventory();
-        boolean usingToolBelt = inv.usingToolsItem();
-        ItemContainer activeContainer = usingToolBelt ? inv.getTools() : inv.getHotbar();
-        short activeSlot = (short) (usingToolBelt ? inv.getActiveToolsSlot() : inv.getActiveHotbarSlot());
-        ItemStack tool = activeContainer.getItemStack(activeSlot);
+        InventoryComponent.Tool inv = store.getComponent(pRef, InventoryComponent.Tool.getComponentType());
+        ItemStack tool = InventoryComponent.getItemInHand(store, pRef);
         if (tool == null || tool.isEmpty()) tool = null;
         String toolId = (tool != null) ? tool.getItem().getId() : "";
 
@@ -180,9 +182,10 @@ public class MiningManager {
             }
         }
 
-        if (!isCreative && tool != null && !tool.isUnbreakable()) {
-            player.updateItemStackDurability(pRef, tool, activeContainer, activeSlot, -Math.min(totalDurabilityCost, tool.getDurability()), store);
-            player.getInventory();
+        if (!isCreative && tool != null && !tool.isUnbreakable() && totalDurabilityCost > 0
+                && inv != null && inv.getActiveSlot() != InventoryComponent.INACTIVE_SLOT_INDEX) {
+            ItemUtils.updateItemStackDurability(pRef, tool, inv.getInventory(), inv.getActiveSlot(),
+                    -Math.min(totalDurabilityCost, tool.getDurability()), store);
         }
 
         Random rand = new Random();
@@ -335,7 +338,7 @@ public class MiningManager {
         if (mode.equals("at_player") || mode.equals("player")) {
             TransformComponent t = store.getComponent(playerRef, TransformComponent.getComponentType());
             if (t != null) {
-                base = t.getPosition().clone().add(0, 0.2, 0);
+                base = new Vector3d(t.getPosition()).add(0, 0.2, 0);
             } else {
                 base = new Vector3d(sourcePos.x + 0.5, sourcePos.y + 0.5, sourcePos.z + 0.5);
             }
@@ -351,7 +354,7 @@ public class MiningManager {
     private void spawnStack(Store<EntityStore> store, Vector3d base, ItemStack stack, Random rand) {
         if (stack == null || !isValidId(stack.getItemId())) return;
         Vector3d pos = base.add(new Vector3d((rand.nextDouble() - 0.5) * 0.5, (rand.nextDouble() - 0.5) * 0.5, (rand.nextDouble() - 0.5) * 0.5));
-        Holder<EntityStore> item = ItemComponent.generateItemDrop(store, stack, pos, Vector3f.ZERO, 0, 0.15f, 0);
+        Holder<EntityStore> item = ItemComponent.generateItemDrop(store, stack, pos, new Rotation3f(0, 0, 0), 0, 0.15f, 0);
         if (item != null) store.addEntity(item, AddReason.SPAWN);
     }
 
