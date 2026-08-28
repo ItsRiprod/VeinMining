@@ -1,22 +1,22 @@
-package com.einent.veinmining;
+package com.riprod.veinminly;
 
-import com.einent.veinmining.commands.VeinMiningCommand;
-import com.einent.veinmining.config.VeinMiningConfig;
-import com.einent.veinmining.systems.VeinMiningInputSystem;
-import com.einent.veinmining.systems.VeinMiningSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.util.Config;
+import com.riprod.veinminly.commands.VeinMiningCommand;
+import com.riprod.veinminly.config.VeinMiningConfig;
+import com.riprod.veinminly.systems.VeinMiningInputSystem;
+import com.riprod.veinminly.systems.VeinMiningSystem;
 
 import java.util.logging.Level;
 
-public class VeinMiningPlugin extends JavaPlugin {
+public class VeinminlyPlugin extends JavaPlugin {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
     private final Config<VeinMiningConfig> config;
 
-    public VeinMiningPlugin(JavaPluginInit init) {
+    public VeinminlyPlugin(JavaPluginInit init) {
         super(init);
         this.config = this.withConfig("VeinMining", VeinMiningConfig.CODEC);
     }

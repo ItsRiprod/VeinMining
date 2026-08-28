@@ -1,56 +1,95 @@
 plugins {
     id 'java'
+    id 'com.gradleup.shadow' version '9.4.2'
+    id 'com.azuredoom.hytale-tools' version '1.0.48'
+    id 'com.azuredoom.hytalepublisher' version '1.+'
 }
 
-def manifest = new groovy.json.JsonSlurper().parseText(file('src/main/resources/manifest.json').text)
-
-group = project.group
-version = manifest.Version
-
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
-}
+group = "com.riprod"
+version = project.version
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
+    maven { url = uri("https://www.cursemaven.com") }
 }
 
-def hytaleInstall = "${System.getProperty("user.home")}/AppData/Roaming/Hytale/install"
+configurations {
+    shadowBundle
+    implementation.extendsFrom(shadowBundle)
+}
 
 dependencies {
-    implementation(files("${hytaleInstall}/${hytale_patchline}/package/game/${hytale_version}/Server/HytaleServer.jar"))
+    shadowBundle 'com.riprod:configly:1.+'
 }
 
-tasks.register('deployPlugin', Copy) {
-    dependsOn jar
-    group = 'hytale'
-    from jar.archiveFile
-    into "${System.getProperty("user.home")}/AppData/Roaming/Hytale/UserData/Mods"
-    doLast { println "Plugin deployed to Hytale Mods folder." }
+shadowJar {
+    archiveClassifier.set('')
+    configurations = [project.configurations.shadowBundle]
 }
 
-tasks.register('runServer', JavaExec) {
-    dependsOn jar
-    group = 'hytale'
-    mainClass = 'com.hypixel.hytale.Main'
+hytaleTools {
+    javaVersion = project.java_version as Integer
+    hytaleVersion = project.hytale_version.toString()
+    manifestServerVersion = project.manifestServerVersion.toString()
+    manifestGroup = project.manifest_group.toString()
+    modId = project.mod_id.toString()
+    modDescription = project.mod_description.toString()
+    modUrl = project.mod_url.toString()
+    mainClass = project.main_class.toString()
+    modCredits = project.mod_credits.toString()
+    manifestDependencies = project.manifest_dependencies.toString()
+    manifestOptionalDependencies = project.manifest_opt_dependencies.toString()
+    curseforgeId = project.curseforgeID.toString()
+    disabledByDefault = project.disabled_by_default.toString().toBoolean()
+    includesPack = project.includes_pack.toString().toBoolean()
+    patchline = project.patchline.toString()
 
-    // FORWARDS CONSOLE INPUT TO THE SERVER
-    standardInput = System.in
+    debugEnabled = true
+    debugSuspend = false
 
-    classpath = files("${hytaleInstall}/${hytale_patchline}/package/game/${hytale_version}/Server/HytaleServer.jar")
+    requireDcevm = true
+}
 
-    jvmArgs = [
-            "--enable-native-access=ALL-UNNAMED",
-            "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-            "--add-opens", "java.base/java.util=ALL-UNNAMED",
-            "--add-opens", "java.base/sun.misc=ALL-UNNAMED"
-    ]
+hytalePublisher {
+    version       = project.version
+    changelogFile = "changelog.md"
+    gameVersion   = project.hytale_version.toString()
 
-    args = [
-            "--assets=${hytaleInstall}/${hytale_patchline}/package/game/${hytale_version}/Assets.zip",
-            "--mods=${file("$buildDir/libs").absolutePath}",
-            "--auth-mode", "authenticated"
-    ]
+    modtale {
+        enabled   = true
+        projectId = project.modtale_uuid
+        patchline = project.patchline.toString()
+    }
 
-    workingDir = file("$projectDir/run")
+    curseforge {
+        enabled   = true
+        projectId = project.curseforgeID
+
+        embeddedLibrary "configly"
+    }
+
+    modifold {
+        enabled   = true
+        projectId = project.modifold_id
+
+        embedded "configly"
+    }
+
+        github {
+        enabled = true
+
+        generateReleaseNotes = true
+        includeJar        = true
+        includeSourcesJar = true
+        includeJavadocJar = true    
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of((project.java_version as String).toInteger())
+    }
+    withSourcesJar()
+    withJavadocJar()
 }

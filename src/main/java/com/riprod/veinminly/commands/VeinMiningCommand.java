@@ -1,7 +1,5 @@
-package com.einent.veinmining.commands;
+package com.riprod.veinminly.commands;
 
-import com.einent.veinmining.config.VeinMiningConfig;
-import com.einent.veinmining.gui.VeinMiningGui;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -20,6 +18,8 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.Config;
+import com.riprod.veinminly.config.VeinMiningConfig;
+import com.riprod.veinminly.gui.VeinMiningGui;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;

@@ -1,17 +1,28 @@
 {
-  "Group": "EineNT",
-  "Name": "VeinMining",
-  "Version": "2.2.0",
-  "Description": "Instantly mine connected ores and blocks by holding the Walk key (LEFT ALT). /veinmining to configure.",
-  "Authors": [
-    {
-      "Name": "EineNT"
+    "Group": "Riprod",
+    "Name": "Veinminly",
+    "Version": "2.3.0",
+    "Description": "Instantly mine connected ores and blocks by holding the Walk key (LEFT ALT). /veinmining to configure.",
+    "Authors": [
+        {
+            "Name": "Riprod"
+        },
+        {
+            "Name": "EineNT"
+        }
+    ],
+    "ServerVersion": ">=0.5.0 <0.7.0",
+    "Main": "com.riprod.veinminly.VeinminlyPlugin",
+    "IncludesAssetPack": true,
+    "Dependencies": {
+        
+    },
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "Website": "https://modtale.net/mod/veinminly",
+    "UpdateChecker": {
+        "CurseForge": ""
     }
-  ],
-  "ServerVersion":"^0.5.0",
-  "Main": "com.einent.veinmining.VeinMiningPlugin",
-  "IncludesAssetPack": true,
-  "Dependencies": {},
-  "OptionalDependencies": {},
-  "DisabledByDefault": false
 }

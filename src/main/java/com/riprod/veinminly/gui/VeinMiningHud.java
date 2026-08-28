@@ -1,4 +1,4 @@
-package com.einent.veinmining.gui;
+package com.riprod.veinminly.gui;
 
 import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;

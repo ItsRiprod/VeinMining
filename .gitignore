@@ -43,3 +43,4 @@ bin/
 # Hytale Generated
 run/
 ui-docs/
+key.properties

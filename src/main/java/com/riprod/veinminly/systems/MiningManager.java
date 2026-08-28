@@ -1,6 +1,5 @@
-package com.einent.veinmining.systems;
+package com.riprod.veinminly.systems;
 
-import com.einent.veinmining.config.VeinMiningConfig;
 import com.hypixel.hytale.component.AddReason;
 import com.hypixel.hytale.component.Holder;
 import com.hypixel.hytale.component.Ref;
@@ -35,6 +34,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.Config;
+import com.riprod.veinminly.config.VeinMiningConfig;
 
 import java.lang.reflect.Method;
 import java.util.*;

@@ -1,6 +1,5 @@
-package com.einent.veinmining.gui;
+package com.riprod.veinminly.gui;
 
-import com.einent.veinmining.config.VeinMiningConfig;
 import com.hypixel.hytale.codec.Codec;
 import com.hypixel.hytale.codec.KeyedCodec;
 import com.hypixel.hytale.codec.builder.BuilderCodec;
@@ -17,6 +16,7 @@ import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.Config;
+import com.riprod.veinminly.config.VeinMiningConfig;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;

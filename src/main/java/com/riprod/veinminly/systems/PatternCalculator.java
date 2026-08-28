@@ -1,4 +1,4 @@
-package com.einent.veinmining.systems;
+package com.riprod.veinminly.systems;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
