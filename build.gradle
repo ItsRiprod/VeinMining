@@ -1,56 +1,50 @@
 plugins {
     id 'java'
+    id 'com.gradleup.shadow' version '9.4.2'
+    id 'com.azuredoom.hytale-tools' version '1.0.48'
 }
 
-def manifest = new groovy.json.JsonSlurper().parseText(file('src/main/resources/manifest.json').text)
-
-group = project.group
-version = manifest.Version
-
-java {
-    toolchain.languageVersion = JavaLanguageVersion.of(java_version)
-}
+group = "com.einent"
+version = project.version
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
+    maven { url = uri("https://www.cursemaven.com") }
 }
 
-def hytaleInstall = "${System.getProperty("user.home")}/AppData/Roaming/Hytale/install"
-
-dependencies {
-    implementation(files("${hytaleInstall}/${hytale_patchline}/package/game/${hytale_version}/Server/HytaleServer.jar"))
+configurations {
+    shadowBundle
+    implementation.extendsFrom(shadowBundle)
 }
 
-tasks.register('deployPlugin', Copy) {
-    dependsOn jar
-    group = 'hytale'
-    from jar.archiveFile
-    into "${System.getProperty("user.home")}/AppData/Roaming/Hytale/UserData/Mods"
-    doLast { println "Plugin deployed to Hytale Mods folder." }
+hytaleTools {
+    javaVersion = project.java_version as Integer
+    hytaleVersion = project.hytale_version.toString()
+    manifestServerVersion = project.manifestServerVersion.toString()
+    manifestGroup = project.manifest_group.toString()
+    modId = project.mod_id.toString()
+    modDescription = project.mod_description.toString()
+    modUrl = project.mod_url.toString()
+    mainClass = project.main_class.toString()
+    modCredits = project.mod_credits.toString()
+    manifestDependencies = project.manifest_dependencies.toString()
+    manifestOptionalDependencies = project.manifest_opt_dependencies.toString()
+    curseforgeId = project.curseforgeID.toString()
+    disabledByDefault = project.disabled_by_default.toString().toBoolean()
+    includesPack = project.includes_pack.toString().toBoolean()
+    patchline = project.patchline.toString()
+
+    debugEnabled = true
+    debugSuspend = false
+
+    requireDcevm = true
 }
 
-tasks.register('runServer', JavaExec) {
-    dependsOn jar
-    group = 'hytale'
-    mainClass = 'com.hypixel.hytale.Main'
-
-    // FORWARDS CONSOLE INPUT TO THE SERVER
-    standardInput = System.in
-
-    classpath = files("${hytaleInstall}/${hytale_patchline}/package/game/${hytale_version}/Server/HytaleServer.jar")
-
-    jvmArgs = [
-            "--enable-native-access=ALL-UNNAMED",
-            "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-            "--add-opens", "java.base/java.util=ALL-UNNAMED",
-            "--add-opens", "java.base/sun.misc=ALL-UNNAMED"
-    ]
-
-    args = [
-            "--assets=${hytaleInstall}/${hytale_patchline}/package/game/${hytale_version}/Assets.zip",
-            "--mods=${file("$buildDir/libs").absolutePath}",
-            "--auth-mode", "authenticated"
-    ]
-
-    workingDir = file("$projectDir/run")
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of((project.java_version as String).toInteger())
+    }
+    withSourcesJar()
+    withJavadocJar()
 }

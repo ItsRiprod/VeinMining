@@ -1,0 +1,48 @@
+{
+  "MasterModEnabled": true,
+  "MasterGuiEnabled": true,
+  "MasterSoundEnabled": true,
+  "MasterMaxLimit": 1000,
+  "ShowPatternsAboveLimit": true,
+  "GlobalBlacklistPatterns": [],
+  "BlockWhitelist": [],
+  "BlockBlacklist": [],
+  "DurabilityMultiplier": 1.0,
+  "DropMode": "break",
+  "BundleDrops": false,
+  "RequireValidTool": true,
+  "InstantBreak": false,
+  "EnableQuickSwitch": true,
+  "ValidTools": [
+    "Pickaxe",
+    "Hatchet",
+    "Shovel",
+    "Shears"
+  ],
+  "Groups": [
+    {
+      "Name": "default",
+      "Priority": -1,
+      "MaxVeinSize": 50,
+      "CanOpenGui": true,
+      "ModEnabled": true,
+      "AllowedModes": [
+        "ores",
+        "all",
+        "off"
+      ],
+      "AllowedPatterns": [
+        "freeform",
+        "tunnel3",
+        "cube",
+        "tunnel2",
+        "wall3",
+        "tunnel1",
+        "wall5",
+        "diagonal"
+      ]
+    }
+  ],
+  "PlayerOverrides": [],
+  "PlayerData": []
+}
